@@ -19,7 +19,7 @@
           <div class="flex gap-5 w-full">
             <h4 class="text-2xl antialiased font-bold">Product Cart</h4>
           </div>
-          <table class="shadow-lg bg-white border rounded-lg">
+          <table class="shadow-lg bg-white mt-3 border rounded-lg">
             <tr class="border rounded-lg">
               <th class="bg-gray-100 border text-left px-8 py-4 rounded-lg">
                 Product
@@ -83,7 +83,7 @@
           </div>
           <div class="flex gap-5 mb-3 text-xl">
             <h5 class="w-40">Total:</h5>
-            <h5>&#8358;{{subTotal-100 + 2000}}</h5>
+            <h5>&#8358;{{totalPrice}}</h5>
           </div>
         </div>
 
@@ -100,7 +100,7 @@
       </div>
     </div>
 
-    <CardForm2 v-if="showForm" :toggle="toggleForm" />
+    <CardForm2 v-if="showForm" :toggle="toggleForm" :total="totalPrice" />
   </div>
 </template>
 
@@ -149,6 +149,11 @@ export default {
       });
       return total;
     },
+
+    totalPrice() {
+      let total = this.subTotal -100 + 2000
+      return total
+    }
   },
 
   methods: {
