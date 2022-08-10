@@ -73,6 +73,9 @@
             >
               Fill in Your Card Details
             </h5>
+            <h6 class="text-sm font-medium text-gray-500">
+              Total: &#8358;{{ total }}
+            </h6>
             <button
               @click="toggle"
               type="button"
@@ -139,7 +142,7 @@
                 />
                 <img src="@/assets/card.png" class="w-12 h-6" />
               </div>
-              <span v-if="msg.cardNumber" class="text-xs text-red-400">{{
+              <span v-if="msg.cardNumber" class="text-xs mt-1 text-red-400">{{
                 msg.cardNumber
               }}</span>
 
@@ -185,13 +188,13 @@
                     "
                     ref="year"
                     type="text"
-                    placeholder="YY"
+                    placeholder="YYYY"
                     v-model="year"
                     required
                   />
-                  <span v-if="msg.exYear" class="text-xs text-red-400">{{
+                  <!-- <span v-if="msg.exYear" class="text-xs text-red-400">{{
                     msg.exYear
-                  }}</span>
+                  }}</span> -->
                 </div>
                 <div class="w-full px-2 lg:w-1/2">
                   <input
@@ -211,7 +214,7 @@
                     v-model="cvv"
                     required
                   />
-                  <span v-if="msg.cvv" class="text-xs text-red-400">{{
+                  <span v-if="msg.cvv" class="text-xs mt-1 text-red-400">{{
                     msg.cvv
                   }}</span>
                 </div>
@@ -235,10 +238,11 @@
                 v-model="name"
                 required
               />
-              <span v-if="msg.name" class="text-xs text-red-400">{{
+              <span v-if="msg.name" class="text-xs mt-1 text-red-400">{{
                 msg.name
               }}</span>
               <button
+                @click.prevent="submitForm"
                 class="
                   inline-block
                   w-full
@@ -263,6 +267,9 @@
 </template>
 
 <script>
+import Swal from "sweetalert2";
+import { format } from "date-fns";
+
 export default {
   data() {
     return {
@@ -276,7 +283,7 @@ export default {
       msg: [],
     };
   },
-  props: ["toggle"],
+  props: ["toggle", "total"],
 
   watch: {
     email(value) {
@@ -295,18 +302,6 @@ export default {
       this.name = value;
       this.validateName(value);
     },
-    expiryDate(value) {
-      this.expiryDate = value;
-      this.validateExpiryDate;
-    },
-    month(value) {
-      this.month = value;
-      this.validateMonth(value);
-    },
-    year(value) {
-      this.year = value;
-      this.validateYear(value);
-    },
   },
 
   methods: {
@@ -320,22 +315,24 @@ export default {
 
     validateCardNumber(value) {
       let difference = 19 - value.length;
-      if (value.length < 19) {
+      if (value.length < 16 || value.length > 19) {
         this.msg["cardNumber"] =
-          "Must be 19 characters! " + difference + " characters left";
+          "Must be 16 to 19 characters! " + difference + " characters left";
       } else {
         this.msg["cardNumber"] = "";
       }
     },
+
     validateCvv(value) {
       let difference = 3 - value.length;
-      if (value.length < 3) {
+      if (value.length < 3 || value.length > 3) {
         this.msg["cvv"] =
           "Must be 3 characters! " + difference + " characters left";
       } else {
         this.msg["cvv"] = "";
       }
     },
+
     validateName(value) {
       if (value.length < 1) {
         this.msg["name"] = "Name is required";
@@ -343,6 +340,7 @@ export default {
         this.msg["name"] = "";
       }
     },
+
     validateMonth(value) {
       if (value.length < 1) {
         this.msg["month"] = "Month is required";
@@ -350,38 +348,75 @@ export default {
         this.msg["name"] = "";
       }
     },
-      validateYear(value) {
-      if (value.length < 1) {
-        this.msg["year"] = "Year is required";
-      } else {
-        this.msg["year"] = "";
-      }
+
+    getExpirationDate() {
+      const month = this.month;
+      const year = this.year;
+      const date = new Date();
+
+      date.setMonth(Number(month) - 1);
+      date.setYear(year);
+      date.setDate(1);
+      return format(new Date(date), "MM/dd/yyyy");
     },
-    // validateExpireYear(value) {
-    //   let date = new Date();
-    //   let month = date.getMonth();
-    //   let year = date.getFullYear();
-    //   let exYear = this.$refs.year;
-    //   let exMonth = this.$refs.month;
-    //   if (exMonth.value === 0) {
-    //     alert("please select the month");
-    //     return false;
-    //   }
-    //   if (exYear.value === 0) {
-    //     alert("please select the Year");
-    //     return false;
-    //   }
-    //   if (year > exYear || (year === exYear && month >= exMonth)) {
-    //     this.msg["expiryDate"] = "Please use a valid card";
-    //   } else {
-    //     this.msg["expiryDate"] = "";
-    //   }
-    // },
+
+    submitForm() {
+      this.validateEmail(this.email);
+      this.validateCardNumber(this.cardNumber);
+      this.validateCvv(this.cvv);
+      this.validateName(this.name);
+
+      const axios = require("axios");
+      const qs = require("qs");
+
+      var data = qs.stringify({
+        email: this.email,
+        cardNumber: this.cardNumber,
+        expirationDate: this.getExpirationDate(),
+        cvv: this.cvv,
+        name: this.name,
+      });
+      var config = {
+        method: "post",
+        url: "http://localhost:5000/api/validation",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        data: data,
+      };
+
+      axios(config)
+        .then(function (response) {
+          //console.log(JSON.stringify(response.data));
+          const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+              toast.addEventListener("mouseenter", Swal.stopTimer);
+              toast.addEventListener("mouseleave", Swal.resumeTimer);
+            },
+          });
+
+          return Toast.fire({
+            icon: "success",
+            title: "Payment Made Successfully",
+          });
+        })
+        .catch(function (error) {
+          const errors = error.response.data[0].msg;
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: errors,
+          });
+        });
+    },
   },
 
-  computed: {
-
-  }
+  computed: {},
 };
 </script>
 
