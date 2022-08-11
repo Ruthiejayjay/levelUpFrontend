@@ -5,7 +5,7 @@
         main
         container
         flex xl:flex-row
-        xl:gap-28
+        xl:gap-28 
         justify-between
         px-6
         py-5
@@ -15,7 +15,7 @@
       "
     >
       <div class="md:flex md:items-center md:justify-between">
-        <div class="flex flex-col w-full max-w-3xl mt-4 md:mt-0">
+        <div class="flex flex-col w-full max-w-3xl mt-4 md:mt-4">
           <div class="flex gap-5 w-full">
             <h4 class="text-2xl antialiased font-bold">Product Cart</h4>
           </div>

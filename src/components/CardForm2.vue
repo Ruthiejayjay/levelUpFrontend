@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="relative flex items-center justify-center py-2 px-4 sm:px-6 lg:px-8 sm:pr-10">
     <div
       class="
         bg-black
@@ -19,8 +19,10 @@
         modal
         fade
         fixed
-        top-20
-        left-96
+        lg:top-48
+        lg:bottom-30
+        sm:left-32
+        md:left-64
         w-70
         h-full
         outline-none
